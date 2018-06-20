@@ -3,3 +3,10 @@ html
   head
     title Gem Setting
   body
+
+    .imageGrid
+      - var n = 0
+      while n < 10
+        figure.image
+          - n++
+          img(src=`images/example${n}.jpg`)
