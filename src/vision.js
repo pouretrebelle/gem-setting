@@ -115,7 +115,8 @@ const corners = (image) => {
 
   hits = removeDuplicates(hits);
 
-  const polarData = calcPolarData(hits, img_u8);
+  let polarData = calcPolarData(hits, img_u8);
+  polarData = removeOutliers(polarData);
 
   drawPolarData(polarData, img_u8, data_u32);
 
@@ -138,7 +139,7 @@ const calcPolarData = (hits, img_u8) => {
       Math.pow(x - pivotX, 2) + Math.pow(y - pivotY, 2)
     );
 
-    polarData.push({ angle, distance });
+    polarData.push({ x, y, angle, distance });
   });
 
   polarData.sort((a, b) => {
@@ -146,6 +147,49 @@ const calcPolarData = (hits, img_u8) => {
   });
 
   return polarData;
+};
+
+const removeOutliers = (data) => {
+  const groupCount = 60;
+
+  // array of groupCount of empty arrays
+  const groups = Array.apply(null, { length: groupCount }).map(() => []);
+
+  // put data in group
+  data.forEach((datum) => {
+    const groupIndex = Math.min(
+      Math.floor((datum.angle / (Math.PI * 2)) * groupCount),
+      groupCount - 1
+    );
+    groups[groupIndex].push(datum);
+  });
+
+  // set standard deviation off first group
+  let standardDeviation = getStandardDeviation(groups[0], 'distance');
+
+  // iterate over groups, filtering from the standard deviation of the previous group
+  groups.forEach((group, i) => {
+    if (!group.length) return;
+
+    const groupAverage = arrayAverage(group.map((g) => g.distance));
+    groups[i] = group.filter(
+      (datum) => Math.abs(groupAverage - datum.distance) < standardDeviation * 2
+    );
+
+    standardDeviation = getStandardDeviation(group, 'distance');
+  });
+
+  return groups.reduce((sum, cur) => sum.concat(cur), []);
+};
+
+const arrayAverage = (array) =>
+  array.reduce((sum, x) => x + sum, 0) / array.length;
+
+const getStandardDeviation = (group, key) => {
+  const average = arrayAverage(group.map((g) => g[key]));
+  const squareDiffs = group.map((g) => g[key] - average).map((x) => x * x);
+  const averageSquareDiff = arrayAverage(squareDiffs);
+  return Math.sqrt(averageSquareDiff);
 };
 
 const drawPolarData = (data, img_u8, data_u32) => {
