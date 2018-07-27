@@ -57,6 +57,8 @@ const corners = (image) => {
 
   let hits = [];
 
+  // scan the canny image from all sides and record the first pixel hit
+
   for (let row = 0; row < img_u8.rows; row++) {
     let start = row * img_u8.cols;
     let adder = 1;
@@ -113,21 +115,52 @@ const corners = (image) => {
 
   hits = removeDuplicates(hits);
 
-  drawHits(hits, img_u8, data_u32);
+  const polarData = calcPolarData(hits, img_u8);
+
+  drawPolarData(polarData, img_u8, data_u32);
 
   ctx.putImageData(imageData, 0, 0);
 
   image.src = canvas.toDataURL();
 };
 
-const drawHits = (hits, img_u8, data_u32) => {
+const calcPolarData = (hits, img_u8) => {
+  let polarData = [];
+  const pivotX = img_u8.cols / 2;
+  const pivotY = img_u8.rows / 2;
+
+  hits.forEach((i) => {
+    const x = i % img_u8.cols;
+    const y = Math.floor(i / img_u8.cols);
+
+    const angle = Math.atan2(y - pivotY, -(x - pivotX)) + Math.PI;
+    const distance = Math.sqrt(
+      Math.pow(x - pivotX, 2) + Math.pow(y - pivotY, 2)
+    );
+
+    polarData.push({ angle, distance });
+  });
+
+  polarData.sort((a, b) => {
+    return a.angle - b.angle;
+  });
+
+  return polarData;
+};
+
+const drawPolarData = (data, img_u8, data_u32) => {
   // make everything black
   let j = img_u8.cols * img_u8.rows;
   while (--j >= 0) {
     data_u32[j] = 0xff000000;
   }
   // make all the hits white
-  hits.forEach((i) => (data_u32[i] = 0xffffffff));
+  data.forEach((datum) => {
+    const num =
+      img_u8.cols * Math.floor(datum.distance) +
+      Math.floor((datum.angle / (Math.PI * 2)) * img_u8.cols);
+    data_u32[num] = 0xffffffff;
+  });
 };
 
 // corners(images[0]);
