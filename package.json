@@ -19,6 +19,7 @@
     "file-loader": "^1.1.6",
     "html-loader": "^0.5.4",
     "html-webpack-plugin": "^2.30.1",
+    "imagetracerjs": "^1.2.4",
     "jsfeat": "^0.0.8",
     "node-sass": "^4.7.2",
     "postcss-loader": "^2.0.10",
