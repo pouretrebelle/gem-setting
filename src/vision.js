@@ -1,5 +1,7 @@
 import jsfeat from 'jsfeat';
 
+import ImageTracer from 'imagetracerjs';
+
 const images = Array.from(document.getElementsByTagName('img')).filter(
   (img, i) => i % 2
 );
@@ -118,7 +120,35 @@ const corners = (image) => {
   let polarData = calcPolarData(hits, img_u8);
   polarData = removeOutliers(polarData);
 
-  drawPolarData(polarData, img_u8, data_u32);
+  // drawPolarData(polarData, img_u8, data_u32);
+
+  // ctx.putImageData(imageData, 0, 0);
+
+  // ctx.fillStyle = '#fff';
+  // ctx.fillRect(0, 0, canvas.width, canvas.height);
+  // ctx.fillStyle = '#000';
+  // ctx.beginPath();
+
+  // ctx.lineTo(polarData[0].x, polarData[0].y);
+  // polarData.forEach((datum) => {
+  //   ctx.lineTo(datum.x, datum.y);
+  // });
+  // ctx.closePath();
+  // ctx.fill();
+
+  var newImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+  const svg = ImageTracer.imagedataToSVG(newImageData, {
+    numberofcolors: 2,
+    blurradius: 5,
+    blurdelta: 100,
+    // ltres: 5,
+    qtres: 5,
+    rightangleenhance: false,
+    pathomit: 100,
+  });
+
+  document.getElementsByClassName('test')[0].innerHTML = svg;
 
   ctx.putImageData(imageData, 0, 0);
 
