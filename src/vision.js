@@ -1,4 +1,5 @@
 import jsfeat from 'jsfeat';
+import Loess from 'loess';
 
 const images = Array.from(document.getElementsByTagName('img')).filter(
   (img, i) => i % 2
@@ -117,6 +118,16 @@ const corners = (image) => {
 
   let polarData = calcPolarData(hits, img_u8);
   polarData = removeOutliers(polarData);
+
+  // Loes modelling
+  const loessData = {
+    x: polarData.map((datum) => (datum.angle / (Math.PI * 2)) * img_u8.cols),
+    y: polarData.map((datum) => datum.distance),
+  };
+
+  const model = new Loess(loessData, { span: 0.5, band: 0, degree: 1 });
+  const fit = model.predict();
+  console.log(fit.fitted);
 
   drawPolarData(polarData, img_u8, data_u32);
 
